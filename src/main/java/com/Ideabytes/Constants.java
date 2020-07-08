@@ -32,5 +32,8 @@ public class Constants {
     public static final String COLUMN_ROW = "row";
     public static final String FILE_OUTPUT = "C:\\Users\\luka\\Documents\\ItextOutput\\wraptext.pdf";
     public static final String PREVIEW_IMAGE = "C:\\Users\\luka\\Pictures\\Camera Roll\\Test_Image.jpg";
+    public static final String CANVAS_TITLE = "My Drawing";
+    public static final String SQL_SELECT_GETPAR = "SELECT * FROM paragraph1";
+    public static final String SQL_CREATETABLE = "CREATE TABLE IF NOT EXISTS paragraph1 (row INTEGER, paragraph TEXT)";
 
 }
