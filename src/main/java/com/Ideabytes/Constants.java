@@ -35,5 +35,6 @@ public class Constants {
     public static final String CANVAS_TITLE = "My Drawing";
     public static final String SQL_SELECT_GETPAR = "SELECT * FROM paragraph1";
     public static final String SQL_CREATETABLE = "CREATE TABLE IF NOT EXISTS paragraph1 (row INTEGER, paragraph TEXT)";
+    public static final String FONT_DIRECTORY = "C:\\Users\\luka\\Documents\\SampleFonts";
 
 }

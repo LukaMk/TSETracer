@@ -1,9 +1,15 @@
 package com.Ideabytes;
+import com.Ideabytes.jsonpojo.PersonData;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.json.simple.JSONObject;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /*************************************************************************
@@ -15,7 +21,7 @@ import java.util.List;
  ************************************************************************/
 public class Main {
 private static String paragraph = "";
-public static void main(String[] args) {
+public static void main(String[] args) throws Exception {
 
         int a = PixelFont.inputWidth();
         int c = PixelFont.inputFontSize();
@@ -39,7 +45,7 @@ public static void main(String[] args) {
     // Function to handel sql statements; Creates table with string,
     //@param a amount of horizontal pixels
     //@param c font size
-    public static void initDb(int a, int c){
+    public static void initDb(int a, int c) throws Exception {
 
         try {
             WrapText wrapper = new WrapText(a,c);
@@ -57,7 +63,7 @@ public static void main(String[] args) {
             ResultSet results;
             statement.execute(Constants.SQL_SELECT_GETPAR);
             results = statement.getResultSet();
-
+            wrapPDF.addForm();
             while (results.next()) {
                 paragraph = results.getString(2);
                 if (paragraph != null && !paragraph.isEmpty()) {
@@ -65,12 +71,17 @@ public static void main(String[] args) {
                     wrapPDF.addArticle(lWrapedText);
                 }
             }
+
             //wrapPDF.addArticle(lWrapedText);
 
             results.close();
             statement.close();
             conn.close();
-            wrapPDF.closePdf();
+            wrapPDF.closePdf(lWrapedText);
+
+
+            //jsonTest();
+            readFromDb();
 
 
         } catch (SQLException | IOException e) {
@@ -78,5 +89,43 @@ public static void main(String[] args) {
         }
 
     }
+
+    private static void jsonTest()  {
+        PersonData p1 = new PersonData("Joey", "Lucky" , new Date(2003, 9, 20), Arrays.asList("Joe", "Shmoe"));
+        System.out.println(p1.toString());
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonString = mapper.writeValueAsString(p1);
+            System.out.println(jsonString);
+        }
+        catch (Exception e) {
+
+        }
+
+
+    }
+
+    private static void readFromDb() {
+        Connection conn = null;
+        try {
+            conn = DriverManager.getConnection(Constants.CONNECTION_STRING);
+            Statement statement = conn.createStatement();
+            ResultSet results;
+            statement.execute("SELECT * FROM JSONTable");
+            results = statement.getResultSet();
+            String toConvert =  results.getString(1);
+            if (toConvert != null && !toConvert.isEmpty()) {
+                ObjectMapper mapper = new ObjectMapper();
+                PersonData personFromDb = mapper.readValue(toConvert, PersonData.class);
+                System.out.println("Found in Db: " + personFromDb.toString());
+
+            }
+        } catch (Exception throwables) {
+            throwables.printStackTrace();
+        }
+
+
+    }
+
 
 }

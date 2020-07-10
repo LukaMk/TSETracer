@@ -20,7 +20,7 @@ public class WrapText {
     private final int numPixelsWidth;
     //private final int numPixelsHeight;
     private int numFontSize;
-    int fontTemp = numFontSize;
+
 
     //private String enteredText;
 
@@ -67,7 +67,7 @@ public class WrapText {
         int stringWidth = 0;
         int tmp = 0;
         //when the length of the string gets close enough to the border, exits loop and returns the amount of characters that were able to fit
-        while(stringWidth+72<(this.numPixelsWidth/1.33))
+        while(stringWidth+110<(this.numPixelsWidth/1.33))
         {
             tmp = text.codePointAt(i);
             stringWidth = stringWidth + font.getWidth(tmp) * this.numFontSize / FontProgram.UNITS_NORMALIZATION;
@@ -101,6 +101,7 @@ public class WrapText {
      * @return String inputText with new lines
      ***********************************************************************************************/
     public String wrap(String inputText) throws IOException {
+
         int numCharacters = (int) getWidth(inputText);
         StringBuilder resultString = new StringBuilder();
 
@@ -118,7 +119,7 @@ public class WrapText {
 
             //If first character is a space, it gets removed
             String tmp = inputText.substring((i - 1) * numCharacters, boundary); //creates a string the length of the amount of characters that can fit in one line
-            if (tmp.charAt(0)==' '){
+            if (!tmp.isEmpty() && tmp.charAt(0)==' '){
                 tmp = tmp.replaceFirst(" ", "");
             }
               String tmp2 = "";
@@ -134,10 +135,9 @@ public class WrapText {
             while (j <= 0 && f <= tmp.length()) {
                 f++;
                 j = tmp.indexOf(' ', numCharacters - f);
-
             }
             String newString;
-            if (tmp2.charAt(tmp2.length()-1)==' '||inputText.length() < i * numCharacters) {
+            if (!tmp2.isEmpty()&&tmp2.charAt(tmp2.length()-1)==' '||inputText.length() < i * numCharacters) {
                 tmp = tmp +"\n";
                 resultString.append(tmp);
             }
@@ -152,8 +152,6 @@ public class WrapText {
             }
             System.out.println(j);
         }
-
         return resultString.toString();
     }
-
 }
