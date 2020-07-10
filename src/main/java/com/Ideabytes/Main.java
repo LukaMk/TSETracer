@@ -1,5 +1,5 @@
 package com.Ideabytes;
-import com.Ideabytes.jsonpojo.PersonData;
+import com.Ideabytes.jsonpojo.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.simple.JSONObject;
@@ -107,19 +107,32 @@ public static void main(String[] args) throws Exception {
 
     private static void readFromDb() {
         Connection conn = null;
+        ObjectMapper mapper = new ObjectMapper();
+
         try {
             conn = DriverManager.getConnection(Constants.CONNECTION_STRING);
             Statement statement = conn.createStatement();
             ResultSet results;
             statement.execute("SELECT * FROM JSONTable");
             results = statement.getResultSet();
-            String toConvert =  results.getString(1);
-            if (toConvert != null && !toConvert.isEmpty()) {
-                ObjectMapper mapper = new ObjectMapper();
-                PersonData personFromDb = mapper.readValue(toConvert, PersonData.class);
-                System.out.println("Found in Db: " + personFromDb.toString());
+            while (results.next()) {
+                String toConvert = results.getString(1);
+                if (toConvert != null && !toConvert.isEmpty()) {
+                    ShippingDoc[] lineFromDb = mapper.readValue(toConvert, ShippingDoc[].class);
+                    if (lineFromDb != null && lineFromDb.length != 0) {
+                        System.out.println("Found in Db: " + lineFromDb[0].toString());
+                        PageCommonDynamicDetails pageCommonDynamicDetails = lineFromDb[0].getPageCommonDynamicDetails();
+                        System.out.println("info getShipmentMetaDataDeclarationType " + pageCommonDynamicDetails.getShipmentMetaDataDeclarationType());
+                        for(AdditionalDoc docs : lineFromDb[0].getAdditionalDocs() )
+                        {
+                            System.out.println("additional docs " + docs.getPrintDocsOrderDocCategory());
+                        }
+                    }
 
+                }
             }
+
+
         } catch (Exception throwables) {
             throwables.printStackTrace();
         }
