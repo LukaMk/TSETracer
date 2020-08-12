@@ -1,83 +1,89 @@
 package com.Ideabytes;
-import com.Ideabytes.jsonpojo.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.json.simple.JSONObject;
 
-import javax.swing.*;
-import java.awt.*;
+import com.Ideabytes.jsonpojo.AdditionalDoc;
+import com.Ideabytes.jsonpojo.PageCommonDynamicDetails;
+import com.Ideabytes.jsonpojo.ShippingDoc;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /*************************************************************************
  * Ideabytes Inc.
- * Author: Luka Macieszczak
+ * @author Luka Macieszczak
  * Date: July 6, 2020
- * Purpose: to take user input to convert number of pixels and font size
+ * Purpose: to print pdf wit paragraphs stored in databases
  * to number of characters which fit in one line to wrap text
  ************************************************************************/
+
 public class Main {
-private static String paragraph = "";
+
+    static String setVerbose;
+    static boolean verbose = false;
+    static TSEHandler tseHandler = null;
+
+
+    /**
+     * @param args
+     */
 public static void main(String[] args) throws Exception {
 
+        Scanner sc = new Scanner(System.in);
+        setVerbose = sc.next();
+        if (setVerbose.equals("verbose")) {
+            verbose = true;
+        }
+        tseHandler = new TSEHandler("WrapTextExample", Constants.TSE_CONNECTION_STRING,verbose);
+        tseHandler.addMethod("Main","main", Arrays.asList(new Parameter("args", args)));
         int a = PixelFont.inputWidth();
         int c = PixelFont.inputFontSize();
-
         initDb(a,c);
-
-
-        /*
-        JFrame frame = new JFrame(Constants.CANVAS_TITLE);
-        CanvasFile canvas = new CanvasFile(lWrapedText, wrapper.characters(), c);
-        canvas.setSize(a, 1000);
-        frame.setSize(1000, 1000);
-        frame.add(canvas);
-        frame.pack();
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-         */
-
+        tseHandler.setReturnForResult("Main", "main",new Result("main method","void"));
+        tseHandler.close();
     }
-    // Function to handel sql statements; Creates table with string,
-    //@param a amount of horizontal pixels
-    //@param c font size
-    public static void initDb(int a, int c) throws Exception {
 
+    /**
+     * Creates connection to DB and sends stored paragraphs from table to get wrapped and be printed to pdf
+     * @param numPixels Amount of pixels for width - int
+     * @param fontSize Font size - int
+     */
+    public static void initDb(int numPixels, int fontSize)  {
+        tseHandler.addMethod("Main","initDB", Arrays.asList(new Parameter("numPixels", numPixels), new Parameter("fontSize", fontSize)));
         try {
-            WrapText wrapper = new WrapText(a,c);
+            WrapText wrapper = new WrapText(numPixels,fontSize, tseHandler);
+            wrapper.setTseHandler(tseHandler);
             String lWrapedText = null;
             Connection conn = DriverManager.getConnection(Constants.CONNECTION_STRING);
             System.out.println("Correct");
 
             // Open PDF doc and initialize styles
-            ItextClass wrapPDF = new ItextClass(a,c);
+            ItextClass wrapPDF = new ItextClass(numPixels,fontSize, tseHandler);
+            wrapPDF.setTseHandler(tseHandler);
             wrapPDF.makePDF();
-
-
             Statement statement = conn.createStatement();
             statement.execute(Constants.SQL_CREATETABLE);
             ResultSet results;
             statement.execute(Constants.SQL_SELECT_GETPAR);
             results = statement.getResultSet();
             wrapPDF.addForm();
+            int i = 0;
             while (results.next()) {
-                paragraph = results.getString(2);
+                String paragraph = results.getString(2);
                 if (paragraph != null && !paragraph.isEmpty()) {
                     lWrapedText = wrapper.wrap(paragraph);
-                    wrapPDF.addArticle(lWrapedText);
                 }
+                wrapPDF.addArticle(lWrapedText);
+                i++;
             }
+            wrapPDF.manipulatePdf(i);
 
             //wrapPDF.addArticle(lWrapedText);
 
             results.close();
             statement.close();
             conn.close();
-            wrapPDF.closePdf(lWrapedText);
+            wrapPDF.closePdf();
 
 
             //jsonTest();
@@ -87,28 +93,20 @@ public static void main(String[] args) throws Exception {
         } catch (SQLException | IOException e) {
             System.out.println("Something went wrong" + e.getMessage());
         }
-
+    tseHandler.setReturnForResult("Main","initDB", new Result("Initialize DB input text for wrap", "void"));
     }
 
-    private static void jsonTest()  {
-        PersonData p1 = new PersonData("Joey", "Lucky" , new Date(2003, 9, 20), Arrays.asList("Joe", "Shmoe"));
-        System.out.println(p1.toString());
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            String jsonString = mapper.writeValueAsString(p1);
-            System.out.println(jsonString);
-        }
-        catch (Exception e) {
 
-        }
-
-
-    }
-
-    private static void readFromDb() {
+    /**
+     * Reads content of table from database where each row contains a JSON object
+     * Converts JSON object into POJO that has been defined in package com.Ideabytes.jsonpojo
+     * @return list of {@link com.Ideabytes.jsonpojo.ShippingDoc}
+     */
+    public static List<ShippingDoc> readFromDb() {
+        tseHandler.addMethod("Main","readFromDB", Collections.emptyList());
         Connection conn = null;
         ObjectMapper mapper = new ObjectMapper();
-
+        List<ShippingDoc> lResult = new ArrayList<>();
         try {
             conn = DriverManager.getConnection(Constants.CONNECTION_STRING);
             Statement statement = conn.createStatement();
@@ -127,6 +125,7 @@ public static void main(String[] args) throws Exception {
                         {
                             System.out.println("additional docs " + docs.getPrintDocsOrderDocCategory());
                         }
+                        lResult.add(lineFromDb[0]);
                     }
 
                 }
@@ -136,6 +135,8 @@ public static void main(String[] args) throws Exception {
         } catch (Exception throwables) {
             throwables.printStackTrace();
         }
+        tseHandler.setReturnForResult("Main","readFromDB", new Result("Prints JSON object",lResult));
+        return lResult;
 
 
     }

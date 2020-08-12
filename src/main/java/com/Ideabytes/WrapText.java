@@ -6,30 +6,38 @@ import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 
 /***************************************************************************
  * Ideabytes Inc.
- * Author: Luka Macieszczak
+ * @author Luka Macieszczak
  * Date: June 12, 2020
  * Purpose: Take inputed data and return wrapped text based on pixels and font size
  ***************************************************************************/
 
 //new public class
-public class WrapText {
+public class WrapText extends Tracer{
     //Creating variables
     private final int numPixelsWidth;
     //private final int numPixelsHeight;
-    private int numFontSize;
+    private final int numFontSize;
 
-
-    //private String enteredText;
 
     //Constructor
-    public WrapText(int a, int c) {
-        this.numPixelsWidth = a;
-        //this.numPixelsHeight = b;
-        this.numFontSize = c;
 
+    /**
+     *
+     * @param numPixels number of pixels
+     * @param fontSize font size
+     */
+    public WrapText(int numPixels, int fontSize, TSEHandler tseHandler  ) {
+
+        tseHandler.addMethod("WrapText","WrapText",Arrays.asList(new Parameter("numPixels",numPixels),
+                                                                                      new Parameter("fontSize",fontSize)));
+        this.numPixelsWidth = numPixels;
+        this.numFontSize = fontSize;
+        tseHandler.setReturnForResult("WrapText","WrapText", new Result("Constructor for WrapText", "void"));
     }
     //determines the amount of characters would fit in the given space
 
@@ -38,8 +46,13 @@ public class WrapText {
      * @param firstString string before modified
      * @param toBeInserted whatever you want to insert into firstString
      * @param index The index at which toBeInserted will be put into firstString
+     * @return new string with added characters - String
      *****************************************************************************/
-    public String insertString(String firstString, String toBeInserted, int index) {
+    public String insertString(String firstString, String toBeInserted, int index ) {
+
+        tseHandler.addMethod("WrapText", "insertString",Arrays.asList(new Parameter("firstString", firstString),
+                                                                                           new Parameter("toBeInserted", toBeInserted),
+                                                                                           new Parameter("index",index)) );
         String newString = "";
         for (int f = 0; f < firstString.length(); f++) {
 
@@ -54,13 +67,16 @@ public class WrapText {
                 newString += toBeInserted;
             }
         }
+        tseHandler.setReturnForResult("WrapText", "insertString", new Result("Add new lines to text", newString));
         return (newString);
     }
     /*****************************************************************************
      *Determines the amount of characters that will fit in each line based on font size
      * @param text sends entire string to function
+     * @return Amount of characters that fit in one line - int
      *****************************************************************************/
-    private float getWidth(String text) throws IOException {
+    private float getWidth(String text ) throws IOException {
+        tseHandler.addMethod("WrapText", "getWidth", Arrays.asList(new Parameter("text",text)));
         PdfFont font= PdfFontFactory.createFont(FontConstants.TIMES_ROMAN);
 
         int i = 0;
@@ -73,26 +89,9 @@ public class WrapText {
             stringWidth = stringWidth + font.getWidth(tmp) * this.numFontSize / FontProgram.UNITS_NORMALIZATION;
             i++;
         }
+        tseHandler.setReturnForResult("WrapText", "getWidth", new Result("Determines the amount of characters for each line", i));
         return i;
     }
-    //public int characters() {
-
-      //  return (int) (getWidth() / this.numFontSize);
-   // }
-
-    /* public int numberOfLines() {
-
-        int lines = (int) (this.numPixelsHeight / (this.numFontSize * Constants.MULTIPLIER));
-        if (lines < Constants.par.length() / temp) {
-            this.numFontSize--;
-        } else if (lines > Constants.par.length() / temp) {
-            this.numFontSize++;
-        } else {
-            System.out.println(this.numFontSize);
-            return this.numFontSize;
-        }
-        return 0;
-    } */
 
 
     /***********************************************************************************************
@@ -100,8 +99,8 @@ public class WrapText {
      * @param inputText text being modified
      * @return String inputText with new lines
      ***********************************************************************************************/
-    public String wrap(String inputText) throws IOException {
-
+    public String wrap(String inputText ) throws IOException {
+        tseHandler.addMethod("WrapText", "wrap", Arrays.asList(new Parameter("inputText", inputText)));
         int numCharacters = (int) getWidth(inputText);
         StringBuilder resultString = new StringBuilder();
 
@@ -152,6 +151,7 @@ public class WrapText {
             }
             System.out.println(j);
         }
+        tseHandler.setReturnForResult("WrapText","wrap",new Result("Wraps input text to desired length",resultString.toString()));
         return resultString.toString();
     }
 }
